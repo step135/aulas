@@ -230,7 +230,7 @@
             al +
             "</span>" +
             " soluç" +
-            (sl > 1 ? "ões" : "ão") +
+            (al > 1 ? "ões" : "ão") +
             "</span>"
         );
     }
@@ -274,10 +274,10 @@
         }
         solução_para_editar = null;
         caso_da_solução = null;
-        let r = await supabase
-            .from("exercícios")
-            .update({ soluções: ex.soluções })
-            .eq("id", ex.id);
+        let sol = { soluções: ex.soluções };
+        if (!ex.iniciado) sol.iniciado = "NOW()";
+
+        let r = await supabase.from("exercícios").update(sol).eq("id", ex.id);
         console.log(r);
     }
 
@@ -337,7 +337,7 @@
                 <button on:click={baixar(ex)} use:hideOnClick>baixar</button>
                 <button on:click={edit(ex)}>editar</button>
                 <button on:click={(o) => (adding_solution = true)}
-                    >adicionar solução</button
+                    >adicionar uma solução</button
                 >
                 {#if adding_solution || solução_para_editar}
                     {#if !localStorage.getItem("nome_do_estudante")}
@@ -389,7 +389,7 @@
             <button
                 on:click={() => {
                     e.casos ? (e.casos[e.casos.length] = "") : (e.casos = [""]);
-                }}>adicionar caso</button
+                }}>adicionar um caso</button
             >
             {#if e.casos && e.casos.length}
                 <p>casos</p>
