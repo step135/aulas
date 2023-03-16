@@ -230,8 +230,8 @@
             "<span style='color:red'>" +
             al +
             "</span>" +
-            " soluçõe" +
-            (sl > 1 ? "s" : "") +
+            " soluç" +
+            (sl > 1 ? "ões" : "ão") +
             "</span>"
         );
     }
