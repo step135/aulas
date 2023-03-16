@@ -156,15 +156,15 @@
                 ? "<h4>Casos</h4>" + toCases(c.casos)
                 : "";
         o += c.resultados ? toCases(c.casos) : "";
-        o += c.soluções
-            ? "<h3>Soluções</h3>" +
-              toSolutions(c.soluções, c.casos ? c.casos.length : 0)
-            : "";
+        o += c.soluções ? "<h3>Soluções</h3>" + toSolutions(c.soluções) : "";
         return o;
     }
 
-    function safe_body(s){
-        return s.replace(/(<h[0-5])/g,'$1 style="font-weight:bold;display:block;margin:10px 0;"')
+    function safe_body(s) {
+        return s.replace(
+            /(<h[0-5])/g,
+            '$1 style="font-weight:bold;display:block;margin:10px 0;"'
+        );
     }
 
     function toParagrafs(s) {
@@ -179,14 +179,18 @@
     }
 
     function toCases(p) {
-        return "<ol><li>" + p.join("</li><li>") + "</li></ol>";
+        return (
+            '<ol style="margin:6px 0;"><li>' +
+            p.join("</li><li>") +
+            "</li></ol>"
+        );
     }
 
-    function toSolutions(j, casos) {
+    function toSolutions(j) {
         if (!Array.isArray(j)) return "";
         return (
             toStatisticInfo(j) +
-            "<ul>" +
+            '<ul style="margin:6px 0;">' +
             j
                 .map(
                     (o, index) =>
