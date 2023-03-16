@@ -1,5 +1,6 @@
 <script>
     export let section = "";
+    import autosize from "svelte-autosize";
     let word,
         meaning,
         u_e,
@@ -92,6 +93,7 @@
             //editores: ["RELATION_RECORD_ID"],
         };
         new_word = false;
+        trim_json(data)
         const r = await supabase.from("dicionário").insert(data).select();
     }
 
@@ -104,6 +106,7 @@
     async function save_exercise() {
         if (!e.título || !e.instruções) return false;
         if (e.casos) e.casos = e.casos.filter((w) => w.length);
+        trim_json(e);
         Object.keys(e).forEach((k) => (ex[k] = e[k]));
         let r;
         if (eid) r = await supabase.from("exercícios").update(e).eq("id", eid);
@@ -259,7 +262,7 @@
     }
 
     async function add_solution() {
-        let s = solução.replace(/(^\s+|\s$)/g, "");
+        let s = trim(solução);
         solução = "";
         adding_solution = false;
 
@@ -283,6 +286,7 @@
         caso_da_solução = null;
         let sol = { soluções: ex.soluções };
         if (!ex.iniciado) sol.iniciado = "NOW()";
+        trim_json(sol)
 
         let r = await supabase.from("exercícios").update(sol).eq("id", ex.id);
         console.log(r);
@@ -290,7 +294,7 @@
 
     function save_email(f) {
         let em = f.target.email.value;
-        localStorage.setItem("email", em);
+        localStorage.setItem("email", trim(em));
         if (to_baixar) baixar(to_baixar);
         ask_for_email = false;
         to_baixar = null;
@@ -304,6 +308,17 @@
     function empty_exercise_form() {
         e = { casos: [] };
         eid = null;
+    }
+
+    function trim(s) {
+        return s.replace(/(^\s+|\s+$)/g, "");
+    }
+
+    function trim_json(j) {
+        Object.keys(j).map((o) => {
+            if (typeof j[o] == "object") j[o] = trim_json(j[o]);
+            if (typeof j[o] == "string") j[o] = trim(j[o]);
+        });
     }
 </script>
 
@@ -398,9 +413,9 @@
             <p>título</p>
             <input type="text" bind:value={e.título} />
             <p>teoria</p>
-            <textarea bind:value={e.teoria} />
+            <textarea bind:value={e.teoria} use:autosize />
             <p>instruções</p>
-            <textarea bind:value={e.instruções} />
+            <textarea bind:value={e.instruções} use:autosize />
             <button
                 on:click={() => {
                     e.casos ? (e.casos[e.casos.length] = "") : (e.casos = [""]);
