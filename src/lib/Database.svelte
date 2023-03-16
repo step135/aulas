@@ -128,7 +128,7 @@
         }
         const d = {
             title: c.título,
-            body: createBody(c),
+            body: safe_body(createBody(c)),
             recipient: email,
         };
         const rawResponse = await fetch("https://aulasboas.pt/_email", {
@@ -161,6 +161,10 @@
               toSolutions(c.soluções, c.casos ? c.casos.length : 0)
             : "";
         return o;
+    }
+
+    function safe_body(s){
+        return s.replace(/(<h[0-5])/g,'$1 style="font-weight:bold;display:block;margin:10px 0;"')
     }
 
     function toParagrafs(s) {
@@ -219,7 +223,7 @@
         let sl = solvers.length;
         let al = j.length;
         return (
-            "&#9432; <span style='color:grey;font-size:0.8em'>" +
+            "<div>&#9432; <span style='color:grey;font-size:0.8em'>" +
             "<span style='color:red'>" +
             sl +
             "</span>" +
@@ -230,7 +234,7 @@
             "</span>" +
             " soluç" +
             (al > 1 ? "ões" : "ão") +
-            "</span>"
+            "</span></div>"
         );
     }
 
