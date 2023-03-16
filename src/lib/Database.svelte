@@ -103,12 +103,11 @@
 
     async function save_exercise() {
         if (!e.título || !e.instruções) return false;
-        e.casos = e.casos.filter((w) => w.length);
+        if (e.casos) e.casos = e.casos.filter((w) => w.length);
+        Object.keys(e).forEach((k) => (ex[k] = e[k]));
         let r;
         if (eid) r = await supabase.from("exercícios").update(e).eq("id", eid);
         else r = await supabase.from("exercícios").insert(e);
-        console.log(r);
-        //Object.keys(e).forEach((k) => (ex[k] = e[k]));
         e = { casos: [] };
         eid = null;
         section += "s";
@@ -408,7 +407,7 @@
         background: #141414;
     }
     :global(button) {
-        background-color: #0e0e0e;
+        background-color: #3e3e3e;
         color: #c6c6c6;
     }
     p,
