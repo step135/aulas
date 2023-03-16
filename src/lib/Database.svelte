@@ -15,6 +15,14 @@
     let adding_solution = null;
     let solução = null;
     let caso_da_solução = null;
+    let solução_para_editar = null;
+    let ask_for_email, to_baixar;
+
+    window.edit_case = function (e) {
+        solução_para_editar = e + 1;
+        solução = ex.soluções[e].texto;
+        caso_da_solução = ex.soluções[e].caso_da_solução;
+    };
 
     const supabase_key =
         "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFhZ3NqaG1tc3RvaXFxbndpdnVvIiwicm9sZSI6ImFub24iLCJpYXQiOjE2Nzg3MTQ5OTQsImV4cCI6MTk5NDI5MDk5NH0.AjdbEkw1loUMKOaxYe0GAGd1u7XvrIA_17pMNSjaCqg";
@@ -94,10 +102,13 @@
     show_all();
 
     async function save_exercise() {
+        if (!e.título || !e.instruções) return false;
         e.casos = e.casos.filter((w) => w.length);
-        if (eid) supabase.from("exercícios").update(e).eq("id", eid);
-        else supabase.from("exercícios").insert(e);
-        Object.keys(e).forEach((k) => (ex[k] = e[k]));
+        let r;
+        if (eid) r = await supabase.from("exercícios").update(e).eq("id", eid);
+        else r = await supabase.from("exercícios").insert(e);
+        console.log(r);
+        //Object.keys(e).forEach((k) => (ex[k] = e[k]));
         e = { casos: [] };
         eid = null;
         section += "s";
@@ -111,10 +122,16 @@
     }
 
     async function baixar(c) {
+        let email = localStorage.getItem("email");
+        if (!email) {
+            ask_for_email = true;
+            to_baixar = c;
+            return;
+        }
         const d = {
             title: c.título,
             body: createBody(c),
-            recipient: "madalene@uni-ga.gq",
+            recipient: email,
         };
         const rawResponse = await fetch("https://aulasboas.pt/_email", {
             method: "POST",
@@ -166,17 +183,24 @@
     function toSolutions(j, casos) {
         if (!Array.isArray(j)) return "";
         return (
+            toStatisticInfo(j) +
             "<ul>" +
             j
                 .map(
-                    (o) =>
+                    (o, index) =>
                         "<li>" +
                         (o.caso
-                            ? '<span style="color:lightblue">(' +
+                            ? '<span style="color:gray">(' +
                               o.caso +
                               ")</span> "
                             : "") +
-                        (o.texto ? "<span>" + o.texto + "</span>" : "") +
+                        (o.texto
+                            ? "<span onclick='edit_case(" +
+                              index +
+                              ")' class='clickable'>" +
+                              o.texto +
+                              "</span>"
+                            : "") +
                         (o.nome_do_estudante
                             ? ' <span style="color:gray;font-size:0.8em">' +
                               o.nome_do_estudante +
@@ -189,22 +213,67 @@
         );
     }
 
+    function toStatisticInfo(j) {
+        if (!j.length) return "";
+        let solvers = {};
+        j.map((o) => (solvers[o.nome_do_estudante] = true));
+        solvers = Object.keys(solvers);
+        let sl = solvers.length;
+        let al = j.length;
+        return (
+            "&#9432; <span style='color:grey;font-size:0.8em'>" +
+            "<span style='color:red'>" +
+            sl +
+            "</span>" +
+            " estudante" +
+            (sl > 1 ? "s adicionaram " : " adicionou ") +
+            "<span style='color:red'>" +
+            al +
+            "</span>" +
+            " soluçõe" +
+            (sl > 1 ? "s" : "") +
+            "</span>"
+        );
+    }
+
     function focus(el) {
         el.focus();
+    }
+
+    function intoView(el) {
+        el.scrollIntoView({
+            behavior: "smooth",
+        });
+    }
+
+    function hideOnClick(e) {
+        e.addEventListener("click", function (t) {
+            t.target.style.display = "none";
+        });
     }
 
     async function add_solution() {
         let s = solução.replace(/(^\s+|\s$)/g, "");
         solução = "";
         adding_solution = false;
+
         if (!s) return false;
-        if (!ex.soluções) ex.soluções = [];
-        if(nome_do_estudante)localStorage.setItem("nome_do_estudante",nome_do_estudante)
-        ex.soluções[ex.soluções.length] = {
-            texto: s,
-            caso: caso_da_solução || null,
-            nome_do_estudante
-        };
+        if (solução_para_editar) {
+            let e = ex.soluções[solução_para_editar - 1];
+            e.texto = s;
+            e.caso = caso_da_solução || null;
+            ex = ex;
+        } else {
+            if (!ex.soluções) ex.soluções = [];
+            if (nome_do_estudante)
+                localStorage.setItem("nome_do_estudante", nome_do_estudante);
+            ex.soluções[ex.soluções.length] = {
+                texto: s,
+                caso: caso_da_solução || null,
+                nome_do_estudante,
+            };
+        }
+        solução_para_editar = null;
         caso_da_solução = null;
         let r = await supabase
             .from("exercícios")
@@ -212,99 +281,125 @@
             .eq("id", ex.id);
         console.log(r);
     }
+
+    function save_email(f) {
+        let em = f.target.email.value;
+        localStorage.setItem("email", em);
+        if (to_baixar) baixar(to_baixar);
+        ask_for_email = false;
+        to_baixar = null;
+    }
 </script>
 
 <div>
-    {#if section == "dicionário"}
-        {#if !new_word}
-            <button
-                on:click={(o) => (new_word = true)}
-                on:keydown={(o) => (new_word = true)}
-            >
-                adicionar nova expressão
-            </button>
-        {:else}
-            <form on:submit|preventDefault={handle_new_word}>
-                <p>palavra</p>
-                <input bind:value={word} use:focus />
-                <p>significado</p>
-                <input bind:value={meaning} />
-                <button>salvar</button>
-            </form>
-        {/if}
-        {#each all[section] as c, index}
-            <p id={c.id} class="clickable">
-                <span class="pal">{c.palavra}</span>
-                <span class="sig">{c.significado}</span>
-            </p>
-            <hr />
-        {/each}
-    {/if}
-    {#if section == "exercícios"}
-        {#if ex.título}
-            <h2>{ex.título}</h2>
-            <div class="body">{@html createBody(ex)}</div>
-            <button on:click={(o) => (ex = {})}>fechar</button>
-            <button on:click={baixar(ex)}>baixar</button>
-            <button on:click={edit(ex)}>editar</button>
-            <button on:click={(o) => (adding_solution = true)}
-                >adicionar solução</button
-            >
-            {#if adding_solution}
-                {#if !localStorage.getItem("nome_do_estudante")}
-                <p>Qual é o seu nome</p>
-                <input bind:value={nome_do_estudante}>
-                {/if}
-                {#if ex.casos && ex.casos.length}
-                    <p>
-                        caso <select bind:value={caso_da_solução}>
-                            {#each ex.casos as _, i}
-                                <option value={i + 1}>{i + 1}</option>
-                            {/each}
-                        </select>
-                    </p>
-                {/if}
-                <p>a solução</p>
-                <input bind:value={solução} />
-                <button on:click={add_solution}>adicionar</button>
-            {/if}
-        {:else}
-            <button on:click={(o) => (section = "exercício")}
-                >crear um exercício</button
-            >
-            {#each all[section] as c, index}
-                <p
-                    id={c.id}
-                    on:click={(o) => (ex = c)}
-                    on:keydown={(o) => (ex = c)}
-                    class="clickable"
+    {#if ask_for_email}
+        <p>Qual é o teu e-mail?</p>
+        <form on:submit|preventDefault={save_email}>
+            <input name="email" />
+            <button>adiciona</button>
+        </form>
+    {:else}
+        {#if section == "dicionário"}
+            {#if !new_word}
+                <button
+                    on:click={(o) => (new_word = true)}
+                    on:keydown={(o) => (new_word = true)}
                 >
-                    {c.título}
+                    adicionar nova expressão
+                </button>
+            {:else}
+                <form on:submit|preventDefault={handle_new_word}>
+                    <p>palavra</p>
+                    <input bind:value={word} use:focus />
+                    <p>significado</p>
+                    <input bind:value={meaning} />
+                    <button>salvar</button>
+                </form>
+            {/if}
+            {#each all[section] as c, index}
+                <p id={c.id} class="clickable">
+                    <span class="pal">{c.palavra}</span>
+                    <span class="sig">{c.significado}</span>
                 </p>
                 <hr />
             {/each}
         {/if}
-    {/if}
-    {#if section == "exercício"}
-        <p>título</p>
-        <input type="text" bind:value={e.título} />
-        <p>teoria</p>
-        <textarea bind:value={e.teoria} />
-        <p>instruções</p>
-        <textarea bind:value={e.instruções} />
-        <button
-            on:click={() => {
-                e.casos ? (e.casos[e.casos.length] = "") : (e.casos = [""]);
-            }}>adicionar caso</button
-        >
-        {#if e.casos && e.casos.length}
-            <p>casos</p>
-            {#each e.casos as _, i}
-                <input bind:value={e.casos[i]} />
-            {/each}
+        {#if section == "exercícios"}
+            {#if ex.título}
+                <h2>{ex.título}</h2>
+                <div class="body">{@html createBody(ex)}</div>
+                <button
+                    on:click={(o) => {
+                        ex = {};
+                        adding_solution = false;
+                        solução_para_editar = null;
+                    }}>fechar</button
+                >
+                <button on:click={baixar(ex)} use:hideOnClick>baixar</button>
+                <button on:click={edit(ex)}>editar</button>
+                <button on:click={(o) => (adding_solution = true)}
+                    >adicionar solução</button
+                >
+                {#if adding_solution || solução_para_editar}
+                    {#if !localStorage.getItem("nome_do_estudante")}
+                        <p>Qual é o teu nome?</p>
+                        <input bind:value={nome_do_estudante} use:focus />
+                    {/if}
+                    {#if ex.casos && ex.casos.length}
+                        <p>
+                            caso <select bind:value={caso_da_solução}>
+                                {#each ex.casos as _, i}
+                                    <option value={i + 1}>{i + 1}</option>
+                                {/each}
+                            </select>
+                        </p>
+                    {/if}
+                    <p>A solução</p>
+                    <input bind:value={solução} use:focus />
+                    {#if solução_para_editar}
+                        <button on:click={add_solution}>salvar</button>
+                    {:else}
+                        <button on:click={add_solution}>adicionar</button>
+                    {/if}
+                    <div use:intoView />
+                {/if}
+            {:else}
+                <button on:click={(o) => (section = "exercício")}
+                    >crear um exercício</button
+                >
+                {#each all[section] as c, index}
+                    <p
+                        id={c.id}
+                        on:click={(o) => (ex = c)}
+                        on:keydown={(o) => (ex = c)}
+                        class="clickable"
+                    >
+                        {c.título}
+                    </p>
+                    <hr />
+                {/each}
+            {/if}
         {/if}
-        <button on:click={save_exercise}>salvar</button>
-    {/if}
+        {#if section == "exercício"}
+            <p>título</p>
+            <input type="text" bind:value={e.título} />
+            <p>teoria</p>
+            <textarea bind:value={e.teoria} />
+            <p>instruções</p>
+            <textarea bind:value={e.instruções} />
+            <button
+                on:click={() => {
+                    e.casos ? (e.casos[e.casos.length] = "") : (e.casos = [""]);
+                }}>adicionar caso</button
+            >
+            {#if e.casos && e.casos.length}
+                <p>casos</p>
+                {#each e.casos as _, i}
+                    <input bind:value={e.casos[i]} />
+                {/each}
+            {/if}
+            <button on:click={save_exercise}>salvar</button>
+        {/if}{/if}
 </div>
 
 <style>
@@ -338,7 +433,7 @@
     .pal {
         color: yellowgreen;
     }
-    .clickable {
+    :global(.clickable) {
         cursor: pointer;
     }
     input,
