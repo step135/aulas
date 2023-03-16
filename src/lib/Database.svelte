@@ -108,8 +108,7 @@
         let r;
         if (eid) r = await supabase.from("exercícios").update(e).eq("id", eid);
         else r = await supabase.from("exercícios").insert(e);
-        e = { casos: [] };
-        eid = null;
+        empty_exercise_form();
         section += "s";
     }
 
@@ -288,6 +287,16 @@
         ask_for_email = false;
         to_baixar = null;
     }
+
+    function create_exercise() {
+        section = "exercício";
+        empty_exercise_form();
+    }
+
+    function empty_exercise_form() {
+        e = { casos: [] };
+        eid = null;
+    }
 </script>
 
 <div>
@@ -295,7 +304,7 @@
         <p>Qual é o teu e-mail?</p>
         <form on:submit|preventDefault={save_email}>
             <input name="email" />
-            <button>adiciona</button>
+            <button>adicionar</button>
         </form>
     {:else}
         {#if section == "dicionário"}
@@ -363,9 +372,7 @@
                     <div use:intoView />
                 {/if}
             {:else}
-                <button on:click={(o) => (section = "exercício")}
-                    >crear um exercício</button
-                >
+                <button on:click={create_exercise}>crear um exercício</button>
                 {#each all[section] as c, index}
                     <p
                         id={c.id}
