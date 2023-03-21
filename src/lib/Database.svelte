@@ -319,7 +319,7 @@
 
     function trim_json(j) {
         Object.keys(j).map((o) => {
-            if (typeof j[o] == "object" && j[o]) j[o] = trim_json(j[o]);
+            if (typeof j[o] == "object" && j[o]) trim_json(j[o]);
             if (typeof j[o] == "string") j[o] = trim(j[o]);
         });
     }
