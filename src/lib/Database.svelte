@@ -70,13 +70,15 @@
                         (k) => (q[k] = payload.new[k])
                     );
                     all = all;
+                    ex = ex;
+                    e = e;
                 }
             )
             .subscribe();
         return r.data || [];
     }
 
-    function handle_new_word(e) {
+    function handle_new_word() {
         add_new_word(word, meaning);
         //e.target.reset();
         //https://svelte.dev/repl/9d071bd67ce547819bbad9b8364804a6?version=3.38.3
@@ -93,7 +95,7 @@
             //editores: ["RELATION_RECORD_ID"],
         };
         new_word = false;
-        trim_json(data)
+        trim_json(data);
         const r = await supabase.from("dicionário").insert(data).select();
     }
 
@@ -118,8 +120,9 @@
     function edit(c) {
         eid = c.id;
         section = "exercício";
-        const { título, teoria, instruções, casos } = c;
-        e = { título, teoria, instruções, casos };
+        //const { título, teoria, instruções, casos } = c;
+        //e = { título, teoria, instruções, casos };
+        e = c;
     }
 
     async function baixar(c) {
@@ -261,7 +264,7 @@
         });
     }
 
-    async function add_solution() {
+    async function add_or_edit_solution() {
         let s = trim(solução);
         solução = "";
         adding_solution = false;
@@ -286,7 +289,7 @@
         caso_da_solução = null;
         let sol = { soluções: ex.soluções };
         if (!ex.iniciado) sol.iniciado = "NOW()";
-        trim_json(sol)
+        trim_json(sol);
 
         let r = await supabase.from("exercícios").update(sol).eq("id", ex.id);
         console.log(r);
@@ -370,8 +373,8 @@
                     }}>fechar</button
                 >
                 <button on:click={baixar(ex)} use:hideOnClick>baixar</button>
-                <button on:click={edit(ex)}>editar</button>
-                <button on:click={(o) => (adding_solution = true)}
+                <button on:click={() => edit(ex)}>editar</button>
+                <button on:click={() => (adding_solution = true)}
                     >adicionar uma solução</button
                 >
                 {#if adding_solution || solução_para_editar}
@@ -391,9 +394,11 @@
                     <p>A solução</p>
                     <input bind:value={solução} use:focus />
                     {#if solução_para_editar}
-                        <button on:click={add_solution}>salvar</button>
+                        <button on:click={add_or_edit_solution}>salvar</button>
                     {:else}
-                        <button on:click={add_solution}>adicionar</button>
+                        <button on:click={add_or_edit_solution}
+                            >adicionar</button
+                        >
                     {/if}
                     <div use:intoView />
                 {/if}
@@ -402,8 +407,8 @@
                 {#each all[section] as c, index}
                     <p
                         id={c.id}
-                        on:click={(o) => (ex = c)}
-                        on:keydown={(o) => (ex = c)}
+                        on:click={() => (ex = c)}
+                        on:keydown={() => (ex = c)}
                         class="clickable"
                     >
                         {c.título}
