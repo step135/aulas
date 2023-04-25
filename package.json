@@ -14,6 +14,7 @@
     "vite": "^4.1.0"
   },
   "dependencies": {
+    "@quilicicf/markdown-formatter": "^4.0.7",
     "@supabase/supabase-js": "^2.10.0",
     "pocketbase": "^0.12.1",
     "svelte-autosize": "^1.1.0"

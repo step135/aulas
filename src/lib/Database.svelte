@@ -18,6 +18,10 @@
     let caso_da_solução = null;
     let solução_para_editar = null;
     let ask_for_email, to_baixar;
+    let items_per_student = null;
+    let titles_of_items_per_student = null;
+    let taken_item = null;
+    let palavras_do_caso = null;
 
     window.edit_case = function (e) {
         solução_para_editar = e + 1;
@@ -28,6 +32,7 @@
     const supabase_key =
         "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFhZ3NqaG1tc3RvaXFxbndpdnVvIiwicm9sZSI6ImFub24iLCJpYXQiOjE2Nzg3MTQ5OTQsImV4cCI6MTk5NDI5MDk5NH0.AjdbEkw1loUMKOaxYe0GAGd1u7XvrIA_17pMNSjaCqg";
     import { createClient } from "@supabase/supabase-js";
+    import { is_function } from "svelte/internal";
     const supabase = createClient(
         "https://aagsjhmmstoiqqnwivuo.supabase.co",
         supabase_key
@@ -48,7 +53,7 @@
                     table: tb,
                 },
                 (payload) => {
-                    console.log("ooooooooooooo", payload);
+                    console.log("ooooooooooooo INSERT", payload);
                     all[tb].unshift(payload.new);
                     all = all;
                 }
@@ -64,11 +69,31 @@
                     table: tb,
                 },
                 (payload) => {
-                    console.log("ooooooooooooo", payload);
+                    console.log("ooooooooooooo UPDATE", payload);
                     let q = all[tb].find((o) => o.id == payload.new.id);
                     Object.keys(payload.new).forEach(
                         (k) => (q[k] = payload.new[k])
                     );
+                    all = all;
+                    ex = ex;
+                    e = e;
+                }
+            )
+            .subscribe();
+        supabase
+            .channel("any_string_you_want_delete" + tb)
+            .on(
+                "postgres_changes",
+                {
+                    event: "DELETE",
+                    schema: "public",
+                    table: tb,
+                },
+                (payload) => {
+                    console.log("ooooooooooooo DELETE", payload);
+                    let q = all[tb].find((o) => o.id == payload.old.id);
+                    q = {};
+                    all[tb] = all[tb].filter((o) => o.id !== payload.old.id);
                     all = all;
                     ex = ex;
                     e = e;
@@ -112,7 +137,15 @@
         Object.keys(e).forEach((k) => (ex[k] = e[k]));
         let r;
         if (eid) r = await supabase.from("exercícios").update(e).eq("id", eid);
-        else r = await supabase.from("exercícios").insert(e);
+        else {
+            r = await supabase.from("exercícios").insert(e).select();
+            console.log(r);
+            if (!r.error) {
+                let id = r.data[0].id;
+                console.log("id", id);
+                eid = ex.id = id;
+            }
+        }
         empty_exercise_form();
         section += "s";
     }
@@ -174,6 +207,7 @@
     }
 
     function toParagrafs(s) {
+        return window.marked.parse(s);
         return (
             "<p>" +
             s
@@ -185,11 +219,59 @@
     }
 
     function toCases(p) {
+        titles_of_items_per_student = items_per_student = null;
+        if (!Array.isArray(p) || !p.length) return;
+        if (p[0].match(":") && p[0].split(",").length > 3) {
+            items_per_student = p.map((x) =>
+                x
+                    .split(":")
+                    .pop()
+                    .replace(/^\s+/, "")
+                    .replace(/,\s*/g, ",")
+                    .split(",")
+            );
+            p = titles_of_items_per_student = p.map((x) => x.split(":")[0]);
+        }
         return (
             '<ol style="margin:6px 0;"><li>' +
             p.join("</li><li>") +
             "</li></ol>"
         );
+    }
+
+    function take_item() {
+        if (!titles_of_items_per_student) return false;
+        taken_item = [titles_of_items_per_student[0], items_per_student[0][0]];
+        return true;
+    }
+
+    function get_taken_items() {
+        if (!ex || !ex.soluções) return null;
+        return ex.soluções.map((s) => s.palavras_do_caso).filter();
+    }
+
+    function get_available_items() {
+        let ti = get_taken_items();
+        if (!items_per_student || !ti) return null;
+        return items_per_student.map((it) => it.filter((x) => !ti.includes(x)));
+    }
+
+    function get_solutions_per_student() {
+        let nome_do_estudante = localStorage.getItem("nome_do_estudante");
+        if (!ex || !ex.soluções || !nome_do_estudante) return null;
+        let sols = [];
+        let sols_per_case = [];
+        ex.soluções.map((s) => {
+            if (s.nome_do_estudante == nome_do_estudante) {
+                sols.push(s);
+                if (s.caso) {
+                    let p = sols_per_case[s.caso];
+                    if (!Array.isArray(p)) p = [];
+                    p.push(s);
+                }
+            }
+        });
+        return [sols, sols_per_case];
     }
 
     function toSolutions(j) {
@@ -276,12 +358,14 @@
             e.caso = caso_da_solução || null;
             ex = ex;
         } else {
-            if (!ex.soluções) ex.soluções = [];
             if (nome_do_estudante)
                 localStorage.setItem("nome_do_estudante", nome_do_estudante);
+            else if (!localStorage.getItem("nome_do_estudante")) return false;
+            if (!ex.soluções) ex.soluções = [];
             ex.soluções[ex.soluções.length] = {
                 texto: s,
                 caso: caso_da_solução || null,
+                palavras_do_caso,
                 nome_do_estudante,
             };
         }
@@ -327,6 +411,10 @@
         });
     }
 </script>
+
+<svelte:head>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</svelte:head>
 
 <div>
     {#if ask_for_email}
@@ -374,7 +462,7 @@
                 >
                 <button on:click={baixar(ex)} use:hideOnClick>baixar</button>
                 <button on:click={() => edit(ex)}>editar</button>
-                <button on:click={() => (adding_solution = true)}
+                <button on:click={() => (adding_solution = true) && take_item()}
                     >adicionar uma solução</button
                 >
                 {#if adding_solution || solução_para_editar}
@@ -383,16 +471,35 @@
                         <input bind:value={nome_do_estudante} use:focus />
                     {/if}
                     {#if ex.casos && ex.casos.length}
-                        <p>
-                            caso <select bind:value={caso_da_solução}>
-                                {#each ex.casos as _, i}
-                                    <option value={i + 1}>{i + 1}</option>
-                                {/each}
-                            </select>
-                        </p>
+                        {#if items_per_student}
+                            {#each items_per_student as it, i}
+                                <h4>{titles_of_items_per_student[i]}</h4>
+                                <p>
+                                    {it.join(", ")}
+                                </p>
+                            {/each}
+                            {#if taken_item}
+                                <h4>
+                                    taken item: {taken_item[1]} ({taken_item[0]})
+                                </h4>
+                            {/if}
+                        {:else}
+                            <p>
+                                caso <select bind:value={caso_da_solução}>
+                                    {#each ex.casos as _, i}
+                                        <option value={i + 1}>{i + 1}</option>
+                                    {/each}
+                                </select>
+                            </p>
+                        {/if}
                     {/if}
                     <p>A solução</p>
-                    <input bind:value={solução} use:focus />
+                    <textarea
+                        bind:value={solução}
+                        use:focus
+                        rows="1"
+                        use:autosize
+                    />
                     {#if solução_para_editar}
                         <button on:click={add_or_edit_solution}>salvar</button>
                     {:else}
@@ -432,14 +539,45 @@
             {#if e.casos && e.casos.length}
                 <p>casos</p>
                 {#each e.casos as _, i}
-                    <input bind:value={e.casos[i]} />
+                    <div><input bind:value={e.casos[i]} /></div>
                 {/each}
             {/if}
             <button on:click={save_exercise}>salvar</button>
-        {/if}{/if}
+        {/if}
+    {/if}
 </div>
 
 <style>
+    :global(blockquote) {
+        font-weight: 100;
+        font-size: 2rem;
+        line-height: 1.4;
+        position: relative;
+        margin: 0;
+        padding: 1rem 2.5rem;
+    }
+
+    :global(blockquote:before),
+    :global(blockquote:after) {
+        position: absolute;
+        color: #f1efe6;
+        font-size: 8rem;
+        width: 4rem;
+        height: 4rem;
+    }
+
+    :global(blockquote:before) {
+        content: "“";
+        left: -1rem;
+        top: -3rem;
+    }
+
+    :global(blockquote:after) {
+        content: "”";
+        right: -1rem;
+        bottom: 1rem;
+    }
+
     :global(body) {
         color: rgba(255, 255, 255, 0.87);
         background: #141414;
@@ -479,6 +617,7 @@
         font-size: 24px;
         margin-bottom: 6px;
         box-sizing: border-box;
+        resize: none;
     }
     p {
         margin: 0;
