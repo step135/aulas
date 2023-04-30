@@ -494,12 +494,16 @@
                         {/if}
                     {/if}
                     <p>A solução</p>
-                    <textarea
-                        bind:value={solução}
-                        use:focus
-                        rows="1"
-                        use:autosize
-                    />
+                    {#if !localStorage.getItem("nome_do_estudante")}
+                        <textarea bind:value={solução} rows="1" use:autosize />
+                    {:else}
+                        <textarea
+                            bind:value={solução}
+                            use:focus
+                            rows="1"
+                            use:autosize
+                        />
+                    {/if}
                     {#if solução_para_editar}
                         <button on:click={add_or_edit_solution}>salvar</button>
                     {:else}
