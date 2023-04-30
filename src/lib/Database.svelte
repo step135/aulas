@@ -292,7 +292,7 @@
                             ? "<span onclick='edit_case(" +
                               index +
                               ")' class='clickable'>" +
-                              o.texto +
+                              window.marked.parse(o.texto) +
                               "</span>"
                             : "") +
                         (o.nome_do_estudante
