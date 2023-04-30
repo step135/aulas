@@ -41,7 +41,7 @@ h1 {
 }
 
 #app {
-  max-width: 100%;
+  max-width: 880px;
   margin: 0 auto;
   text-align: center;
 }

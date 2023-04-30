@@ -24,6 +24,7 @@
     let palavras_do_caso = null;
 
     window.edit_case = function (e) {
+        save_possible_name();
         solução_para_editar = e + 1;
         solução = ex.soluções[e].texto;
         caso_da_solução = ex.soluções[e].caso_da_solução;
@@ -292,7 +293,7 @@
                             ? "<span onclick='edit_case(" +
                               index +
                               ")' class='clickable'>" +
-                              window.marked.parse(o.texto) +
+                              basic_formatting(o.texto) +
                               "</span>"
                             : "") +
                         (o.nome_do_estudante
@@ -305,6 +306,12 @@
                 .join("") +
             "</ul>"
         );
+    }
+
+    function basic_formatting(s) {
+        return s
+            .replace(/\*\*([^\n*]*)\*\*/g, "<b>$1</b>")
+            .replace(/\*([^\n*]*)\*/g, "<em>$1</em>");
     }
 
     function toStatisticInfo(j) {
@@ -348,8 +355,6 @@
 
     async function add_or_edit_solution() {
         let s = trim(solução);
-        solução = "";
-        adding_solution = false;
 
         if (!s) return false;
         if (solução_para_editar) {
@@ -358,9 +363,8 @@
             e.caso = caso_da_solução || null;
             ex = ex;
         } else {
-            if (nome_do_estudante)
-                localStorage.setItem("nome_do_estudante", nome_do_estudante);
-            else if (!localStorage.getItem("nome_do_estudante")) return false;
+            save_possible_name();
+            if (!localStorage.getItem("nome_do_estudante")) return false;
             if (!ex.soluções) ex.soluções = [];
             ex.soluções[ex.soluções.length] = {
                 texto: s,
@@ -369,6 +373,8 @@
                 nome_do_estudante,
             };
         }
+        solução = "";
+        adding_solution = false;
         solução_para_editar = null;
         caso_da_solução = null;
         let sol = { soluções: ex.soluções };
@@ -377,6 +383,11 @@
 
         let r = await supabase.from("exercícios").update(sol).eq("id", ex.id);
         console.log(r);
+    }
+
+    function save_possible_name(){
+        if (nome_do_estudante)
+                localStorage.setItem("nome_do_estudante", nome_do_estudante);
     }
 
     function save_email(f) {
