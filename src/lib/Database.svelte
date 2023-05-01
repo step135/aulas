@@ -546,7 +546,7 @@
             {/if}
         {/if}
         {#if section == "exercício"}
-            <p>título</p>
+            <p class="max-size">título</p>
             <input type="text" bind:value={e.título} />
             <p>teoria</p>
             <textarea bind:value={e.teoria} use:autosize />
@@ -577,7 +577,7 @@
         margin: 0;
         padding: 1rem 2.5rem;
         margin-bottom: 4rem;
-        margin-top:1.7rem;
+        margin-top: 1.7rem;
     }
     :global(blockquote p) {
         margin: 20px 0;
@@ -623,17 +623,20 @@
         border: 3px solid #6a6a62;
         background: rgb(78, 78, 78);
     }
-    :global(h2):after,:global(h3):after {
+    :global(h2):after,
+    :global(h3):after {
         content: "";
         display: block;
         border-bottom: 1px solid;
-        opacity: 0.2;
+        opacity: 0.3;
     }
-    :global(h2){
+    :global(h2) {
         color: darkorange;
     }
-    :global(h3),:global(h4),:global(h5){
-        color:crimson;
+    :global(h3),
+    :global(h4),
+    :global(h5) {
+        color: crimson;
     }
     .pal {
         color: yellowgreen;
