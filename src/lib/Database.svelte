@@ -187,16 +187,16 @@
 
     function createBody(c) {
         let o = "";
-        o += c.teoria ? "<h3>Teoria</h3>" + toParagrafs(c.teoria) : "";
+        o += c.teoria ? "<h2>Teoria</h2>" + toParagrafs(c.teoria) : "";
         o += c.instruções
-            ? "<h3>Instruções</h3>" + toParagrafs(c.instruções)
+            ? "<h2>Instruções</h2>" + toParagrafs(c.instruções)
             : "";
         o +=
             c.casos && c.casos.length
-                ? "<h4>Casos</h4>" + toCases(c.casos)
+                ? "<h2>Casos</h2>" + toCases(c.casos)
                 : "";
         o += c.resultados ? toCases(c.casos) : "";
-        o += c.soluções ? "<h3>Soluções</h3>" + toSolutions(c.soluções) : "";
+        o += c.soluções ? "<h2>Soluções</h2>" + toSolutions(c.soluções) : "";
         return o;
     }
 
@@ -208,7 +208,7 @@
     }
 
     function toParagrafs(s) {
-        return window.marked.parse(s);
+        return window.marked.parse(lower_headers(s));
         return (
             "<p>" +
             s
@@ -308,6 +308,12 @@
         );
     }
 
+    function lower_headers(s) {
+        if (s.match(/(^|\n)#[^#]/)) s = s.replace(/((^|\n)#)/g, "$1#");
+        if (s.match(/(^|\n)##[^#]/)) s = s.replace(/((^|\n)#)/g, "$1#");
+        return s;
+    }
+
     function basic_formatting(s) {
         return s
             .replace(/\*\*([^\n*]*)\*\*/g, "<b>$1</b>")
@@ -385,9 +391,9 @@
         console.log(r);
     }
 
-    function save_possible_name(){
+    function save_possible_name() {
         if (nome_do_estudante)
-                localStorage.setItem("nome_do_estudante", nome_do_estudante);
+            localStorage.setItem("nome_do_estudante", nome_do_estudante);
     }
 
     function save_email(f) {
@@ -570,6 +576,11 @@
         position: relative;
         margin: 0;
         padding: 1rem 2.5rem;
+        margin-bottom: 4rem;
+        margin-top:1.7rem;
+    }
+    :global(blockquote p) {
+        margin: 20px 0;
     }
 
     :global(blockquote:before),
@@ -590,7 +601,7 @@
     :global(blockquote:after) {
         content: "”";
         right: -1rem;
-        bottom: 1rem;
+        bottom: -1rem;
     }
 
     :global(body) {
@@ -609,16 +620,20 @@
         color: beige;
         background: #252320;
         box-shadow: 0px 5px 30px #b5b5a8;
+        border: 3px solid #6a6a62;
+        background: rgb(78, 78, 78);
     }
-    :global(h3):after {
+    :global(h2):after,:global(h3):after {
         content: "";
         display: block;
         border-bottom: 1px solid;
         opacity: 0.2;
     }
-    :global(h3),
-    :global(h4) {
+    :global(h2){
         color: darkorange;
+    }
+    :global(h3),:global(h4),:global(h5){
+        color:crimson;
     }
     .pal {
         color: yellowgreen;
@@ -639,6 +654,9 @@
         margin-top: 12px;
     }
     button {
-        margin-top: 12px;
+        margin-top: 16px;
+    }
+    button:last-of-type {
+        margin-bottom: 12px;
     }
 </style>

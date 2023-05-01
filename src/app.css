@@ -19,8 +19,25 @@ a {
   color: #646cff;
   text-decoration: inherit;
 }
+
 a:hover {
   color: #535bf2;
+}
+
+b,
+strong,
+em {
+  color: aliceblue;
+  text-decoration: none;
+  background-position-y: -0%;
+  background-image: linear-gradient(transparent 50%, gold 50%);
+  transition: background 500ms ease, color 500ms ease;
+  background-size: 2px;
+  background-size: auto 175%;
+}
+
+.link:hover {
+  background-position-y: 100%;
 }
 
 body {
@@ -37,7 +54,7 @@ h1 {
 }
 
 .card {
-  padding: 2em;
+  padding: 0.2em 1.4em;
 }
 
 #app {
@@ -57,9 +74,11 @@ button {
   cursor: pointer;
   transition: border-color 0.25s;
 }
+
 button:hover {
   border-color: #646cff;
 }
+
 button:focus,
 button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
@@ -70,9 +89,11 @@ button:focus-visible {
     color: #213547;
     background-color: #ffffff;
   }
+
   a:hover {
     color: #747bff;
   }
+
   button {
     background-color: #f9f9f9;
   }
