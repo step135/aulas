@@ -9,14 +9,15 @@
     "preview": "vite preview"
   },
   "devDependencies": {
-    "@sveltejs/vite-plugin-svelte": "^2.0.2",
-    "svelte": "^3.55.1",
-    "vite": "^4.1.0"
+    "@sveltejs/vite-plugin-svelte": "^3.0.1",
+    "svelte": "^4.2.8",
+    "vite": "^5.0.10"
   },
   "dependencies": {
-    "@quilicicf/markdown-formatter": "^4.0.7",
+    "@quilicicf/markdown-formatter": "^5.0.0",
     "@supabase/supabase-js": "^2.10.0",
-    "pocketbase": "^0.12.1",
+    "@vitejs/plugin-legacy": "^5.2.0",
+    "pocketbase": "^0.20.1",
     "svelte-autosize": "^1.1.0"
   }
 }
