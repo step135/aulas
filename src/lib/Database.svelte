@@ -30,16 +30,23 @@
         caso_da_solução = ex.soluções[e].caso_da_solução;
     };
 
+    window.development_mode = window.location.href.includes("testing")
+
     const supabase_key =
         "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFhZ3NqaG1tc3RvaXFxbndpdnVvIiwicm9sZSI6ImFub24iLCJpYXQiOjE2Nzg3MTQ5OTQsImV4cCI6MTk5NDI5MDk5NH0.AjdbEkw1loUMKOaxYe0GAGd1u7XvrIA_17pMNSjaCqg";
     import { createClient } from "@supabase/supabase-js";
-    import { is_function } from "svelte/internal";
+    //import { is_function } from "svelte/internal";
     const supabase = createClient(
         "https://aagsjhmmstoiqqnwivuo.supabase.co",
         supabase_key
     );
 
+    function right_tb(tb){
+        return ["exercícios", "dicionário"].includes(tb) && window.development_mode? tb + "_test" : tb;
+    }
+
     async function get_all(tb) {
+        tb = right_tb(tb);
         const r = await supabase
             .from(tb)
             .select()
@@ -122,7 +129,9 @@
         };
         new_word = false;
         trim_json(data);
-        const r = await supabase.from("dicionário").insert(data).select();
+        var tb = "dicionário"
+        tb = right_tb(tb);
+        const r = await supabase.from(tb).insert(data).select();
     }
 
     async function show_all() {
@@ -137,9 +146,11 @@
         trim_json(e);
         Object.keys(e).forEach((k) => (ex[k] = e[k]));
         let r;
-        if (eid) r = await supabase.from("exercícios").update(e).eq("id", eid);
+        var tb = "exercícios";
+        tb = right_tb(tb);
+        if (eid) r = await supabase.from(tb).update(e).eq("id", eid);
         else {
-            r = await supabase.from("exercícios").insert(e).select();
+            r = await supabase.from(tb).insert(e).select();
             console.log(r);
             if (!r.error) {
                 let id = r.data[0].id;
@@ -387,7 +398,10 @@
         if (!ex.iniciado) sol.iniciado = "NOW()";
         trim_json(sol);
 
-        let r = await supabase.from("exercícios").update(sol).eq("id", ex.id);
+        var tb = "exercícios";
+        tb = right_tb(tb);
+
+        let r = await supabase.from(tb).update(sol).eq("id", ex.id);
         console.log(r);
     }
 
@@ -531,7 +545,7 @@
                     <div use:intoView />
                 {/if}
             {:else}
-                <button on:click={create_exercise}>crear um exercício</button>
+                <button on:click={create_exercise}>criar um exercício</button>
                 {#each all[section] as c, index}
                     <p
                         id={c.id}
