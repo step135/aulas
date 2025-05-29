@@ -37,5 +37,8 @@
     "@supabase/supabase-js": "^2.10.0",
     "pocketbase": "^0.20.1",
     "svelte-autosize": "^1.1.0"
+  },
+  "engines": {
+    "node": ">=18"
   }
 }
