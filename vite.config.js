@@ -6,5 +6,6 @@ import legacy from '@vitejs/plugin-legacy'
 export default defineConfig({
   plugins: [legacy({
     targets: ['defaults', 'IE 11'],
+    additionalLegacyPolyfills: ['regenerator-runtime/runtime']
   }),svelte()],
 })

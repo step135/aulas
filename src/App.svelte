@@ -1,9 +1,19 @@
 <script>
   import Database from "./lib/Database.svelte";
+
   let section = "";
   function ch_section(e) {
     section = e.target.innerHTML;
   }
+
+  window.addEventListener('unhandledrejection', event => {
+    alert("Promise rejection: " + event.reason)
+  });
+
+  window.onerror = function(message, source, lineno, colno, error) {
+    alert(`Error: ${message} at ${source}:${lineno}:${colno}:${error}`) 
+    return false; // allow default handling as well
+  };
 </script>
 
 <main>
@@ -41,6 +51,7 @@
     border-bottom: 1px solid rgb(67, 67, 67);
     padding-bottom: 10px;
     padding-top:10px;
+    user-select: none;
   }
   #menu > * {
     cursor: pointer;

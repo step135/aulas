@@ -219,6 +219,10 @@
     }
 
     function toParagrafs(s) {
+        if((typeof window.marked == "undefined") || !window.marked){
+            alert("window.marked is undefined");
+            return lower_headers(s);
+        }
         return window.marked.parse(lower_headers(s));
         return (
             "<p>" +
@@ -444,7 +448,14 @@
 </script>
 
 <svelte:head>
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script>
+        function script(src){
+            var sc = document.createElement("script")
+            sc.src = src
+            document.head.appendChild(sc)
+        }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js" onload="if(!window.marked) script('https://cdn.jsdelivr.net/npm/marked@0.3.6/marked.min.js')" onerror="alert('marked script load error')"></script>
 </svelte:head>
 
 <div>
