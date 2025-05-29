@@ -52,6 +52,7 @@
     padding-bottom: 10px;
     padding-top:10px;
     user-select: none;
+    -ms-user-select: none;
   }
   #menu > * {
     cursor: pointer;
